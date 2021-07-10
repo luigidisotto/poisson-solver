@@ -5,8 +5,7 @@
 using namespace std;
 using namespace ff;
 
-
-_2DParallelJacobi::_2DParallelJacobi(double tol, 
+_2DParallelJacobi::_2DParallelJacobi(double tol,
 									 int it,
 									 int nw,
 									 int chk,
@@ -14,29 +13,28 @@ _2DParallelJacobi::_2DParallelJacobi(double tol,
 									 int j) : _2DIterativePoissonSolver(tol, it)
 {
 
- 	numberOfWorkers = nw;
- 	chunk = chk;
- 	ci = i;
- 	cj = j;
-
+	numberOfWorkers = nw;
+	chunk = chk;
+	ci = i;
+	cj = j;
 }
 
-inline int _2DParallelJacobi::getNumberOfWorkers(){ return numberOfWorkers; }
+inline int _2DParallelJacobi::getNumberOfWorkers() { return numberOfWorkers; }
 
-inline int _2DParallelJacobi::getChunk(){ return chunk; }
+inline int _2DParallelJacobi::getChunk() { return chunk; }
 
+inline void _2DParallelJacobi::operator()(_2DPoissonEquation *eq)
+{
 
-inline void _2DParallelJacobi::operator()(_2DPoissonEquation * eq){
-
-	_2DGrid * grid = eq->getGrid();
+	_2DGrid *grid = eq->getGrid();
 
 	long int _n = grid->getXlen(),
 			 _m = grid->getYlen();
 
-	double * __restrict__ _unew = grid->getU(),
-		   * __restrict__ _uold = (double *)malloc(sizeof(double) * _n *_m);
+	double *__restrict__ _unew = grid->getU(),
+						 *__restrict__ _uold = (double *)malloc(sizeof(double) * _n * _m);
 
-	double * _f = eq->getF();
+	double *_f = eq->getF();
 
 	double hhxx = grid->getXspacing() * grid->getXspacing(),
 		   hhyy = grid->getYspacing() * grid->getYspacing();
@@ -44,26 +42,27 @@ inline void _2DParallelJacobi::operator()(_2DPoissonEquation * eq){
 	double Error = 10 * getTolerance();
 
 	long int CI = ci,
-	     	 CJ = cj;
+			 CJ = cj;
 
 	ParallelForReduce<double> pfr(getNumberOfWorkers(), (getNumberOfWorkers() < ff_numCores()));
 
-	auto Fsum = [](double& v, const double elem) { v += elem; };
+	auto Fsum = [](double &v, const double elem)
+	{ v += elem; };
 
-	auto Fcopy = [&_uold,&_unew,_m](const long i) {
-    	//double * __restrict__ __attribute__((aligned(ALIGNMENT))) __uold = _uold;
-    	//double * __restrict__ __attribute__((aligned(ALIGNMENT))) __unew = _unew;
-		double * __restrict__ __uold = (double *)__builtin_assume_aligned(_uold, ALIGNMENT);
-    	double * __restrict__ __unew = (double *)__builtin_assume_aligned(_unew, ALIGNMENT);
+	auto Fcopy = [&_uold, &_unew, _m](const long i)
+	{
+		//double * __restrict__ __attribute__((aligned(ALIGNMENT))) __uold = _uold;
+		//double * __restrict__ __attribute__((aligned(ALIGNMENT))) __unew = _unew;
+		double *__restrict__ __uold = (double *)__builtin_assume_aligned(_uold, ALIGNMENT);
+		double *__restrict__ __unew = (double *)__builtin_assume_aligned(_unew, ALIGNMENT);
 
+#pragma ivdep
+		for (int j = 0; j < _m; j++)
+			__uold[_m * i + j] = __unew[_m * i + j];
+	};
 
-    	#pragma ivdep
-    	for (int j=0; j < _m; j++)
-      		__uold[_m*i + j] = __unew[_m*i + j];
-    };
-
-    //one-dimensional partitioning by rows? yeah, by rows
-    /*auto Freduce = [&_uold,&_unew,_f,_m,hhxx,hhyy](const long i, double& Error) {
+	//one-dimensional partitioning by rows? yeah, by rows
+	/*auto Freduce = [&_uold,&_unew,_f,_m,hhxx,hhyy](const long i, double& Error) {
     	//double * __restrict__ __uold = (double *)__builtin_assume_aligned(_uold, ALIGNMENT);
     	//double * __restrict__ __unew = (double *)__builtin_assume_aligned(_unew, ALIGNMENT);
     	double * __restrict__ __f    = (double *)__builtin_assume_aligned(_f, ALIGNMENT);
@@ -129,70 +128,67 @@ inline void _2DParallelJacobi::operator()(_2DPoissonEquation * eq){
 			
     };*/
 
-    	auto Freduce = [&_uold,&_unew,_f,_m, _n,hhxx,hhyy](const long i, double& Error){
+	auto Freduce = [&_uold, &_unew, _f, _m, _n, hhxx, hhyy](const long i, double &Error)
+	{
+		double *__restrict__ __uold = (double *)__builtin_assume_aligned(_uold, ALIGNMENT);
+		double *__restrict__ __unew = (double *)__builtin_assume_aligned(_unew, ALIGNMENT);
+		double *__restrict__ __f = (double *)__builtin_assume_aligned(_f, ALIGNMENT);
 
-    		double * __restrict__ __uold = (double *)__builtin_assume_aligned(_uold, ALIGNMENT);
-	    	double * __restrict__ __unew = (double *)__builtin_assume_aligned(_unew, ALIGNMENT);
-	    	double * __restrict__ __f    = (double *)__builtin_assume_aligned(_f, ALIGNMENT);
+#pragma ivdep
+		for (int j = 1; j < _m - 1; j++)
+		{
+			const long double val = 0.5 * (hhxx * hhyy * _f[i * _m + j] + hhyy * (__uold[i * _m + j - 1] + __uold[i * _m + j + 1]) + hhxx * (__uold[(i - 1) * _m + j] + __uold[(i + 1) * _m + j])) / (hhyy + hhxx);
+			//const long double val = 0.25 * ( -hhxx*_f[i*_m + j]  - __uold[i*_m + j-1] -  __uold[i*_m + j+1] +
+			//					  		   - __uold[(i-1)*_m + j] - __uold[(i+1)*_m + j] );
+			__unew[i * _m + j] = val;
+			Error += (__uold[i * _m + j] - __unew[i * _m + j]) * (__uold[i * _m + j] - __unew[i * _m + j]);
+		}
+	};
 
-	    	#pragma ivdep
-	    	for(int j = 1; j < _m-1; j++){
-	    		const long double val = 0.5 * ( hhxx*hhyy*_f[i*_m + j] + hhyy*(__uold[i*_m + j-1] + __uold[i*_m + j+1]) +
-									  hhxx*(__uold[(i-1)*_m + j] + __uold[(i+1)*_m + j]) )/(hhyy + hhxx);
-	      		//const long double val = 0.25 * ( -hhxx*_f[i*_m + j]  - __uold[i*_m + j-1] -  __uold[i*_m + j+1] +
-				//					  		   - __uold[(i-1)*_m + j] - __uold[(i+1)*_m + j] );
-	      		__unew[i*_m + j] = val;
-				Error += (__uold[i*_m + j] - __unew[i*_m + j]) * (__uold[i*_m + j] - __unew[i*_m + j]);
-	    	}
+	auto FreduceBlocked = [&_uold, &_unew, _f, _m, _n, hhxx, hhyy, CI, CJ](const long ii, double &Error)
+	{
+		double *__restrict__ __uold = (double *)__builtin_assume_aligned(_uold, ALIGNMENT);
+		double *__restrict__ __unew = (double *)__builtin_assume_aligned(_unew, ALIGNMENT);
+		double *__restrict__ __f = (double *)__builtin_assume_aligned(_f, ALIGNMENT);
 
+#pragma ivdep
+		for (long jj = 1; jj < _m; jj += CJ)
+		{
+			for (long i = ii; i < min(ii + CI, _n - 1); i++)
+			{
+				for (long j = jj; j < min(jj + CJ, _m - 1); j++)
+				{
 
-    	};
+					const long double val = 0.5 * (hhxx * hhyy * _f[i * _m + j] + hhyy * (__uold[i * _m + j - 1] + __uold[i * _m + j + 1]) + hhxx * (__uold[(i - 1) * _m + j] + __uold[(i + 1) * _m + j])) / (hhyy + hhxx);
 
-        auto FreduceBlocked = [&_uold,&_unew,_f,_m, _n,hhxx,hhyy, CI, CJ](const long ii, double& Error) {
+					__unew[i * _m + j] = val;
+					Error += (__uold[i * _m + j] - __unew[i * _m + j]) * (__uold[i * _m + j] - __unew[i * _m + j]);
+				}
+			}
+		}
+	};
 
-	    	double * __restrict__ __uold = (double *)__builtin_assume_aligned(_uold, ALIGNMENT);
-	    	double * __restrict__ __unew = (double *)__builtin_assume_aligned(_unew, ALIGNMENT);
-	    	double * __restrict__ __f    = (double *)__builtin_assume_aligned(_f, ALIGNMENT);
-
-	    	#pragma ivdep
-	    	for(long jj = 1; jj < _m; jj+=CJ){
-	        	for(long i = ii; i < min(ii + CI, _n-1); i++){
-	          		for (long j = jj; j < min(jj + CJ, _m-1); j++){
-
-	        			const long double val = 0.5 * ( hhxx*hhyy*_f[i*_m + j] + hhyy*(__uold[i*_m + j-1] + __uold[i*_m + j+1]) +
-									  hhxx*(__uold[(i-1)*_m + j] + __uold[(i+1)*_m + j]) )/(hhyy + hhxx);
-	      		
-	      				__unew[i*_m + j] = val;
-						Error += (__uold[i*_m + j] - __unew[i*_m + j]) * (__uold[i*_m + j] - __unew[i*_m + j]);
-
-			        }
-				} 
-			}	  
-		};
-
-
-	while(getActualNumberOfIterations() < getMaxNumberOfIterations() && Error > getTolerance()){
+	while (getActualNumberOfIterations() < getMaxNumberOfIterations() && Error > getTolerance())
+	{
 
 		Error = 0.0;
 
-		pfr.parallel_for(0,_n-1,1, getChunk(), Fcopy, getNumberOfWorkers());
+		pfr.parallel_for(0, _n - 1, 1, getChunk(), Fcopy, getNumberOfWorkers());
 
-		pfr.parallel_reduce(Error, 0.0, 1, _n-2, 1, getChunk(), Freduce, Fsum, getNumberOfWorkers());
+		pfr.parallel_reduce(Error, 0.0, 1, _n - 2, 1, getChunk(), Freduce, Fsum, getNumberOfWorkers());
 
 		// pfr.parallel_reduce(Error, 0.0, 1, _n-1, CI, getChunk(), FreduceBlocked, Fsum, getNumberOfWorkers());
-		
-		Error = sqrt(Error)/sqrt(_n*_m);
+
+		Error = sqrt(Error) / sqrt(_n * _m);
 
 		// pfr.parallel_for(0,_n-1,1, getChunk(), Fcopy, getNumberOfWorkers());
 
 		incrActualNumberOfIterations();
 
 		// printf("%i %e\n", getActualNumberOfIterations(), Error);
-
 	}
 
 	//std::swap(_unew, _uold);
 	grid->setError(Error);
 	free(_uold);
-
 }

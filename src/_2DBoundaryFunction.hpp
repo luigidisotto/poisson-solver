@@ -6,15 +6,14 @@
 
 using namespace std;
 
-class _2DBoundaryFunction{
+class _2DBoundaryFunction
+{
 
-	public:
-		std::function<double(double, double)> g;
+public:
+	std::function<double(double, double)> g;
 
-	public:
-
-	 virtual void operator() (_2DGrid * grid){};
-
+public:
+	virtual void operator()(_2DGrid *grid){};
 };
 
 #endif

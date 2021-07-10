@@ -3,32 +3,30 @@
 
 using namespace std;
 
+class _2DGrid
+{
 
-class _2DGrid {
+private:
+	double ax,
+		bx,
+		ay,
+		by;
 
-	private:
-		double ax,
-		    bx,
-		    ay,
-		    by;
+	int m,
+		n;
 
-		int m,
-			n;
+	double hx,
+		hy;
 
-		double hx,
-		       hy;
+	double Error;
 
-		double Error;
+public:
+	double *U;
 
-	public:
-	 	
-	 	double * U;
-
-	public:
-
-	_2DGrid(double ax, double bx, 
-		    double ay, double by,
-		    int m, int n);
+public:
+	_2DGrid(double ax, double bx,
+			double ay, double by,
+			int m, int n);
 
 	~_2DGrid();
 
@@ -56,9 +54,8 @@ class _2DGrid {
 
 	double getby();
 
-	double * getU();
+	double *getU();
 
 	void printGrid();
-
 };
 #endif

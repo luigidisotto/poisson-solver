@@ -3,43 +3,48 @@
 
 #include "_2DPoissonSolver.hpp"
 
-class _2DIterativePoissonSolver: public _2DPoissonSolver{
+class _2DIterativePoissonSolver : public _2DPoissonSolver
+{
 
-	public:
-		double tolerance;
+public:
+	double tolerance;
 
-		int maxNumberOfIterations,
-			actualNumberOfIterations;
+	int maxNumberOfIterations,
+		actualNumberOfIterations;
 
-	public:
-		virtual void operator()(_2DPoissonEquation *eq){};
+public:
+	virtual void operator()(_2DPoissonEquation *eq){};
 
-		_2DIterativePoissonSolver(double tol, int it){
-			tolerance = tol;
-			maxNumberOfIterations = it;
-			actualNumberOfIterations = 0;
-		}
+	_2DIterativePoissonSolver(double tol, int it)
+	{
+		tolerance = tol;
+		maxNumberOfIterations = it;
+		actualNumberOfIterations = 0;
+	}
 
-		void copyVector(double *src, double *dst, int n){
+	void copyVector(double *src, double *dst, int n)
+	{
 
-				for(int i=0; i < n; i++)
-					dst[i] = src[i];
-		}
+		for (int i = 0; i < n; i++)
+			dst[i] = src[i];
+	}
 
-		double getTolerance(){ 
-			return tolerance; 
-		}
+	double getTolerance()
+	{
+		return tolerance;
+	}
 
-		int getMaxNumberOfIterations(){ 
-			return maxNumberOfIterations; 
-		}
+	int getMaxNumberOfIterations()
+	{
+		return maxNumberOfIterations;
+	}
 
-		int getActualNumberOfIterations(){ 
-			return actualNumberOfIterations; 
-		}
+	int getActualNumberOfIterations()
+	{
+		return actualNumberOfIterations;
+	}
 
-		void incrActualNumberOfIterations(){ actualNumberOfIterations++; }
-
+	void incrActualNumberOfIterations() { actualNumberOfIterations++; }
 };
 
 #endif

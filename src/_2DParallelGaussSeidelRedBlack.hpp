@@ -7,27 +7,23 @@
 using namespace std;
 using namespace ff;
 
-
-class _2DParallelGaussSeidelRedBlack: public _2DIterativePoissonSolver
+class _2DParallelGaussSeidelRedBlack : public _2DIterativePoissonSolver
 {
 
-	public:
+public:
+	int numberOfWorkers;
+	int chunk;
+	int ci;
+	int cj;
 
-		int numberOfWorkers;
-		int chunk;
-		int ci;
-		int cj;
+public:
+	_2DParallelGaussSeidelRedBlack(double tol, int it, int nw, int chunk, int i, int j);
 
-	public:
-	
-		_2DParallelGaussSeidelRedBlack(double tol, int it, int nw, int chunk, int i, int j);
+	void operator()(_2DPoissonEquation *eq);
 
-		void operator()(_2DPoissonEquation * eq);
+	int getNumberOfWorkers();
 
-		int getNumberOfWorkers();
-
-		int getChunk();
-
+	int getChunk();
 };
 
 #endif

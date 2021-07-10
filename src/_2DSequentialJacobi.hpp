@@ -5,16 +5,13 @@
 
 using namespace std;
 
-
-class _2DSequentialJacobi: public _2DIterativePoissonSolver
+class _2DSequentialJacobi : public _2DIterativePoissonSolver
 {
 
-	public:
-	
-		_2DSequentialJacobi(double tol, int it);
+public:
+	_2DSequentialJacobi(double tol, int it);
 
-		void operator()(_2DPoissonEquation * eq);
-
+	void operator()(_2DPoissonEquation *eq);
 };
 
 #endif

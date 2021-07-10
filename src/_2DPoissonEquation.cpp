@@ -9,7 +9,6 @@
 
 **/
 
-
 /**
 	The discretized 2D Poisson equation (in matrix from)
 				AU = -F
@@ -35,72 +34,73 @@ void _2DPoissonEquation::addBoundariesConditions()
 }*/
 
 #include "_2DPoissonEquation.hpp"
-#include "_2DBoundaryFunction.hpp"	
+#include "_2DBoundaryFunction.hpp"
 #include "_2DGrid.hpp"
 #include <stdlib.h>
-#include <cstdio>	  
-#include "opt.hpp"	  
+#include <cstdio>
+#include "opt.hpp"
 
 using namespace std;
 
-_2DPoissonEquation::_2DPoissonEquation(_2DGrid * grid,
-						   			   _2DBoundaryFunction * g){
+_2DPoissonEquation::_2DPoissonEquation(_2DGrid *grid,
+									   _2DBoundaryFunction *g)
+{
 
 	U = grid;
 	G = g;
 
-	posix_memalign((void **)&F, ALIGNMENT, (grid->getXlen()*grid->getYlen())*sizeof(double));
+	posix_memalign((void **)&F, ALIGNMENT, (grid->getXlen() * grid->getYlen()) * sizeof(double));
 
-	for(int i = 0; i < grid->getXlen()*grid->getYlen(); i++)
+	for (int i = 0; i < grid->getXlen() * grid->getYlen(); i++)
 		F[i] = 0.0;
 
 	(*G)(U);
-
 }
 
-_2DPoissonEquation::_2DPoissonEquation(_2DGrid * grid,
-				   _2DBoundaryFunction *g,
-				   std::function<double(double, double)> f,
-				   std::function<double(double, double)> e){
+_2DPoissonEquation::_2DPoissonEquation(_2DGrid *grid,
+									   _2DBoundaryFunction *g,
+									   std::function<double(double, double)> f,
+									   std::function<double(double, double)> e)
+{
 
 	U = grid;
 	G = g;
 	E = e;
-	posix_memalign((void **)&F, ALIGNMENT, (grid->getXlen()*grid->getYlen())*sizeof(double));
+	posix_memalign((void **)&F, ALIGNMENT, (grid->getXlen() * grid->getYlen()) * sizeof(double));
 
 	(*G)(U);
 
 	double _hx = U->getXspacing(),
 		   _hy = U->getYspacing();
 
-	int	   _n  = U->getXlen(),
-		   _m  = U->getYlen();
+	int _n = U->getXlen(),
+		_m = U->getYlen();
 
 	double _ax = U->getax(),
 		   _ay = U->getay(),
 		   _by = U->getby(),
 		   _bx = U->getbx();
 
-	for(int j = 0; j < _m; j++){
-		F[0 + j] = f(_ax + j*_hx, _by); //north border
-		F[(_n-1)*_m + j] = f(_ax + j*_hx, _ay); //south border
+	for (int j = 0; j < _m; j++)
+	{
+		F[0 + j] = f(_ax + j * _hx, _by);			  //north border
+		F[(_n - 1) * _m + j] = f(_ax + j * _hx, _ay); //south border
 	}
 
+	for (int i = 1; i < _n - 1; i++)
+	{
+		F[i * _m + 0] = f(_ax, _ay + i * _hy);		//east border
+		F[i * _m + _m - 1] = f(_bx, _ay + i * _hy); //west border
+	}
 
-	for(int i = 1; i < _n-1; i++){
-		F[i*_m + 0] = f(_ax, _ay + i*_hy); //east border
-		F[i*_m + _m-1] = f(_bx, _ay + i*_hy); //west border
-	}	   
-
-	for(int i = 1; i < _n-1; i++)
-		for(int j = 1; j < _m-1; j++)
-			F[i*_m + j] = f(_ax + j*_hx, _ay + i*_hy);
-
+	for (int i = 1; i < _n - 1; i++)
+		for (int j = 1; j < _m - 1; j++)
+			F[i * _m + j] = f(_ax + j * _hx, _ay + i * _hy);
 }
 
-_2DPoissonEquation::_2DPoissonEquation(_2DGrid * grid,
-									   _2DBoundaryFunction * g,
-						   			   double * f )
+_2DPoissonEquation::_2DPoissonEquation(_2DGrid *grid,
+									   _2DBoundaryFunction *g,
+									   double *f)
 {
 
 	U = grid;
@@ -108,74 +108,76 @@ _2DPoissonEquation::_2DPoissonEquation(_2DGrid * grid,
 	F = f;
 
 	(*G)(U);
-
 }
 
+_2DPoissonEquation::~_2DPoissonEquation() { free(F); }
 
-_2DPoissonEquation::~_2DPoissonEquation(){ free(F); }
-
-double _2DPoissonEquation::checkExactSolution(std::function<double(double, double)> u){
+double _2DPoissonEquation::checkExactSolution(std::function<double(double, double)> u)
+{
 
 	double _hx = U->getXspacing(),
-		_hy = U->getYspacing();
-		   
-	int	_n  = U->getXlen(),
-		_m  = U->getYlen();
+		   _hy = U->getYspacing();
+
+	int _n = U->getXlen(),
+		_m = U->getYlen();
 
 	double _ax = U->getax(),
-		_ay = U->getay(),
-		_by = U->getby(),
-		_bx = U->getbx();		
+		   _ay = U->getay(),
+		   _by = U->getby(),
+		   _bx = U->getbx();
 
 	long double e = 0.0;
 
 	//check borders error
 
-	for(int j = 0; j < _m; j++){
-		e += (U->get(0 + j) - E(_ax + j*_hx, _by))*(U->get(0 + j) - E(_ax + j*_hx, _by)); //north border
-		e += (U->get(0 + j) - E(_ax + j*_hx, _by))*(U->get((_n-1)*_m + j) - E(_ax + j*_hx, _ay)); //south border
+	for (int j = 0; j < _m; j++)
+	{
+		e += (U->get(0 + j) - E(_ax + j * _hx, _by)) * (U->get(0 + j) - E(_ax + j * _hx, _by));				//north border
+		e += (U->get(0 + j) - E(_ax + j * _hx, _by)) * (U->get((_n - 1) * _m + j) - E(_ax + j * _hx, _ay)); //south border
 	}
 
-
-	for(int i = 1; i < _n-1; i++){
-		e += (U->get(i*_m + 0) - E(_ax, _ay + i*_hy))*(U->get(i*_m + 0) - E(_ax, _ay + i*_hy)); //east border
-		e += (U->get(i*_m + _m-1) - E(_bx, _ay + i*_hy))*(U->get(i*_m + _m-1) - E(_bx, _ay + i*_hy)); //west border
+	for (int i = 1; i < _n - 1; i++)
+	{
+		e += (U->get(i * _m + 0) - E(_ax, _ay + i * _hy)) * (U->get(i * _m + 0) - E(_ax, _ay + i * _hy));			//east border
+		e += (U->get(i * _m + _m - 1) - E(_bx, _ay + i * _hy)) * (U->get(i * _m + _m - 1) - E(_bx, _ay + i * _hy)); //west border
 	}
 
 	//check interior points error
-	for (int i = 1; i < _n-1; i++) //over rows
-		for(int j = 1; j < _m-1; j++){ //over columns
-			e += (U->get(i*_m + j) - E(_ax + j*_hx, _ay + i*_hy))*(U->get(i*_m + j) - E(_ax + j*_hx, _ay + i*_hy));
-		}	
-	
-	return sqrt(e)/sqrt(_n*_m);
+	for (int i = 1; i < _n - 1; i++) //over rows
+		for (int j = 1; j < _m - 1; j++)
+		{ //over columns
+			e += (U->get(i * _m + j) - E(_ax + j * _hx, _ay + i * _hy)) * (U->get(i * _m + j) - E(_ax + j * _hx, _ay + i * _hy));
+		}
 
+	return sqrt(e) / sqrt(_n * _m);
 }
 
-void _2DPoissonEquation::printU(){
+void _2DPoissonEquation::printU()
+{
 	U->printGrid();
 }
 
-double _2DPoissonEquation::getSolutionError(){
+double _2DPoissonEquation::getSolutionError()
+{
 	return U->getError();
 }
 
-_2DGrid * _2DPoissonEquation::getGrid(){ return U; }
+_2DGrid *_2DPoissonEquation::getGrid() { return U; }
 
-double * _2DPoissonEquation::getF(){ return F; }
+double *_2DPoissonEquation::getF() { return F; }
 
 void _2DPoissonEquation::printF()
-{	
+{
 	int _n = U->getXlen(),
-    	_m = U->getYlen();
+		_m = U->getYlen();
 
-    double _ax = U->getax(),
+	double _ax = U->getax(),
 		   _ay = U->getay();
 
 	double _hx = U->getXspacing(),
-		   _hy = U->getYspacing();	   
+		   _hy = U->getYspacing();
 
-	for(int i=0; i < _n; i++)
-	  for(int j=0; j < _m; j++)
-	  	printf("%f\n", F[i*_m + j]);
+	for (int i = 0; i < _n; i++)
+		for (int j = 0; j < _m; j++)
+			printf("%f\n", F[i * _m + j]);
 }

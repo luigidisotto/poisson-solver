@@ -3,15 +3,13 @@
 
 #include "_2DPoissonEquation.hpp"
 
-
 using namespace std;
 
-class _2DPoissonSolver {
+class _2DPoissonSolver
+{
 
 public:
-
-	virtual void operator()(_2DPoissonEquation * eq){};
-
+	virtual void operator()(_2DPoissonEquation *eq){};
 };
 
 #endif

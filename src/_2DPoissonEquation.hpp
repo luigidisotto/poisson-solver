@@ -23,47 +23,44 @@ using namespace std;
 	   in the non specified points (border) is undefined (zero)	
 */
 
-class _2DPoissonEquation{
-		
-	public:
+class _2DPoissonEquation
+{
 
-		_2DGrid *U;
+public:
+	_2DGrid *U;
 
-		double * __attribute__((aligned(ALIGNMENT))) F;
+	double *__attribute__((aligned(ALIGNMENT))) F;
 
-		_2DBoundaryFunction * G;
+	_2DBoundaryFunction *G;
 
-		std::function<double(double, double)> E;
+	std::function<double(double, double)> E;
 
-	public:
-		
+public:
+	_2DPoissonEquation(_2DGrid *grid,
+					   _2DBoundaryFunction *g);
 
-		_2DPoissonEquation(_2DGrid * grid,
-						   _2DBoundaryFunction * g);
+	_2DPoissonEquation(_2DGrid *grid,
+					   _2DBoundaryFunction *g,
+					   double *f);
 
-		_2DPoissonEquation(_2DGrid * grid,
-						   _2DBoundaryFunction * g,
-						   double * f);
+	_2DPoissonEquation(_2DGrid *grid,
+					   _2DBoundaryFunction *g,
+					   std::function<double(double, double)> f,
+					   std::function<double(double, double)> e);
 
-		_2DPoissonEquation(_2DGrid * grid,
-						   _2DBoundaryFunction *g,
-						   std::function<double(double, double)> f,
-						   std::function<double(double, double)> e);
+	double checkExactSolution(std::function<double(double, double)> u);
 
-		double checkExactSolution(std::function<double(double, double)> u);
+	~_2DPoissonEquation();
 
-		~_2DPoissonEquation();
+	_2DGrid *getGrid();
 
-		_2DGrid * getGrid();
+	double *getF();
 
-		double * getF();
+	double getSolutionError();
 
-		double getSolutionError();
+	void printF();
 
-		void printF();
-
-		void printU();			   			 	
-
+	void printU();
 };
 
 #endif

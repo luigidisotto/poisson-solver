@@ -5,16 +5,13 @@
 
 using namespace std;
 
-
-class _2DSequentialGaussSeidelRedBlack: public _2DIterativePoissonSolver
+class _2DSequentialGaussSeidelRedBlack : public _2DIterativePoissonSolver
 {
 
-	public:
-	
-		_2DSequentialGaussSeidelRedBlack(double tol, int it);
+public:
+	_2DSequentialGaussSeidelRedBlack(double tol, int it);
 
-		void operator()(_2DPoissonEquation * eq);
-
+	void operator()(_2DPoissonEquation *eq);
 };
 
 #endif

@@ -12,8 +12,8 @@
 
 using namespace ff;
 
-
-int main(int argc, char *argv[]){
+int main(int argc, char *argv[])
+{
 
 	int n = atoi(argv[1]),
 		m = atoi(argv[2]);
@@ -24,81 +24,75 @@ int main(int argc, char *argv[]){
 		chunk = atoi(argv[5]);
 
 	int ci = atoi(argv[6]),
-	    cj = atoi(argv[7]),
-	    it = atoi(argv[8]);
+		cj = atoi(argv[7]),
+		it = atoi(argv[8]);
 
 	/*
 	*	nabla^2 u = - f
 	*  u = sin(pi*x)*sin(pi*y)
 	   f = 2*pi*pi*sin(pi*x)*sin(pi*y)
-	*/ 
+	*/
 	//auto g = [](double x, double y)->double { return exp(x*y); };
 	//auto e = [](double x, double y)->double { return exp(x*y); };
 	//auto f = [](double x, double y)->double { return (x*x + y*y)*exp(x*y); };
-	auto g = [](double x, double y)->double { return 0; };
-	auto f = [](double x, double y)->double { return 2*M_PI*M_PI*sin(M_PI*x)*sin(M_PI*y); };
-	auto e = [](double x, double y)->double { return sin(M_PI*x)*sin(M_PI*y); };
+	auto g = [](double x, double y) -> double
+	{ return 0; };
+	auto f = [](double x, double y) -> double
+	{ return 2 * M_PI * M_PI * sin(M_PI * x) * sin(M_PI * y); };
+	auto e = [](double x, double y) -> double
+	{ return sin(M_PI * x) * sin(M_PI * y); };
 
 	//auto g = [](double x, double y)->double { return exp(x)*sin(y) + 0.25*(x*x + y*y); };
 	//auto e = [](double x, double y)->double { return exp(x)*sin(y) + 0.25*(x*x + y*y); };
 	//auto f = [](double x, double y)->double { return 1; };
 
+#ifdef SEQ_GAUSS
 
-	#ifdef SEQ_GAUSS
+	//printf("%-10s%-10s%-10s%-15s%-10s%-10s%-10s%-10s%-20s%-20s%-20s\n", "n", "m", "#workers", "time (msec)", "epsilon", "chunk", "c_i", "c_j", "residual", "e", "#iters");
 
-		
-		//printf("%-10s%-10s%-10s%-15s%-10s%-10s%-10s%-10s%-20s%-20s%-20s\n", "n", "m", "#workers", "time (msec)", "epsilon", "chunk", "c_i", "c_j", "residual", "e", "#iters");
-		
-		_2DPoissonEquation * LaPlaceEquation1 = new _2DPoissonEquation(new _2DGrid(0., 1., 0., 1., n, m),
-																	   new _2DDirichlet(g), f, e);
-		_2DSequentialGaussSeidel Gauss(epsilon, it);
+	_2DPoissonEquation *LaPlaceEquation1 = new _2DPoissonEquation(new _2DGrid(0., 1., 0., 1., n, m),
+																  new _2DDirichlet(g), f, e);
+	_2DSequentialGaussSeidel Gauss(epsilon, it);
 
-		ffTime(START_TIME);
-		Gauss(LaPlaceEquation1);
-		ffTime(STOP_TIME);
+	ffTime(START_TIME);
+	Gauss(LaPlaceEquation1);
+	ffTime(STOP_TIME);
 
-		/*printf("%-10i%-10i%-10i%-15f%-10f%-10s%-10s%-10s%-20e%-20e%-15i\n", n, m, 1, 
-										ffTime(GET_TIME), epsilon, "nil", "nil", "nil", 
-										LaPlaceEquation1->getSolutionError(), 
-										LaPlaceEquation1->checkExactSolution(g), 
-										Gauss.getActualNumberOfIterations());*/
-		//printf("\n");
-		//printf("%f\n", ffTime(GET_TIME));
-		//LaPlaceEquation1->printU();
-		printf("\n");
+	printf("\n");
+	printf("error = %f\n", LaPlaceEquation1->getSolutionError());
+	printf("wrt exact solution error = %f\n", LaPlaceEquation1->checkExactSolution(g));
+	printf("no. iterations = %d\n", Gauss.getActualNumberOfIterations());
+	printf("time (ms): %g\n", ffTime(GET_TIME));
+	printf("\n");
 
-	#endif 
+#endif
 
-	#ifdef SEQ_RBGAUSS
+#ifdef SEQ_RBGAUSS
 
-		
-		_2DPoissonEquation * LaPlaceEquation2 = new _2DPoissonEquation(new _2DGrid(0., 1., 0., 1., n, m),
-																	   new _2DDirichlet(g),
-																	   f,e);
+	_2DPoissonEquation *LaPlaceEquation2 = new _2DPoissonEquation(new _2DGrid(0., 1., 0., 1., n, m),
+																  new _2DDirichlet(g),
+																  f, e);
 
-		_2DSequentialGaussSeidelRedBlack GaussRB(epsilon, it);
+	_2DSequentialGaussSeidelRedBlack GaussRB(epsilon, it);
 
-		ffTime(START_TIME);
-		GaussRB(LaPlaceEquation2);
-		ffTime(STOP_TIME);
+	ffTime(START_TIME);
+	GaussRB(LaPlaceEquation2);
+	ffTime(STOP_TIME);
 
-		/*printf("%-10i%-10i%-10i%-15f%-10f%-10s%-10s%-10s%-20e%-20e%-15i\n", n, m, 1, 
-									ffTime(GET_TIME), epsilon, "nil", "nil", "nil",
-									LaPlaceEquation2->getSolutionError(), 
-									LaPlaceEquation2->checkExactSolution(g), 
-									GaussRB.getActualNumberOfIterations());*/
-		//LaPlaceEquation2->printU();
-		printf("\n");
-	//printf("%f\n", ffTime(GET_TIME));
-	//printf("\n");
+	printf("\n");
+	printf("error = %f\n", LaPlaceEquation2->getSolutionError());
+	printf("wrt exact solution error = %f\n", LaPlaceEquation2->checkExactSolution(g));
+	printf("no. iterations = %d\n", GaussRB.getActualNumberOfIterations());
+	printf("time (ms): %g\n", ffTime(GET_TIME));
+	printf("\n");
 
-	#endif
+#endif
 
-	#ifdef SEQ_JAC
-	
-	_2DPoissonEquation * LaPlaceEquation3 = new _2DPoissonEquation(new _2DGrid(0., 1., 0., 1., n, m),
-																   new _2DDirichlet(g),
-																   f,e);
+#ifdef SEQ_JAC
+
+	_2DPoissonEquation *LaPlaceEquation3 = new _2DPoissonEquation(new _2DGrid(0., 1., 0., 1., n, m),
+																  new _2DDirichlet(g),
+																  f, e);
 
 	_2DSequentialJacobi Jacobi(epsilon, it);
 
@@ -112,49 +106,46 @@ int main(int argc, char *argv[]){
 	printf("no. iterations = %d\n", Jacobi.getActualNumberOfIterations());
 	printf("time (ms): %g\n", ffTime(GET_TIME));
 	printf("\n");
-
 	//LaPlaceEquation3->printU();
 
-	#endif 
+#endif
 
-					//*********************** PARALLEL SOLVING *********************
+	//*********************** PARALLEL SOLVING *********************
 
-	#ifdef PAR_JAC
-		_2DPoissonEquation * LaPlaceEquation4 = new _2DPoissonEquation(new _2DGrid(0., 1., 0., 1., n, m),
-																	   new _2DDirichlet(g),
-																	   f, e);
-		_2DParallelJacobi parJacobi(epsilon, it, nw, chunk, ci, cj);
+#ifdef PAR_JAC
+	_2DPoissonEquation *LaPlaceEquation4 = new _2DPoissonEquation(new _2DGrid(0., 1., 0., 1., n, m),
+																  new _2DDirichlet(g),
+																  f, e);
+	_2DParallelJacobi parJacobi(epsilon, it, nw, chunk, ci, cj);
 
-		ffTime(START_TIME);
-		parJacobi(LaPlaceEquation4);
-		ffTime(STOP_TIME);
+	ffTime(START_TIME);
+	parJacobi(LaPlaceEquation4);
+	ffTime(STOP_TIME);
 
-		
-		printf("\n");
-		printf("error = %f\n", LaPlaceEquation4->getSolutionError());
-		printf("wrt exact solution error = %f\n", LaPlaceEquation4->checkExactSolution(g));
-		printf("no. iterations = %d\n", parJacobi.getActualNumberOfIterations());
-		printf("time (ms): %g\n", ffTime(GET_TIME));
-		printf("\n");
+	printf("\n");
+	printf("error = %f\n", LaPlaceEquation4->getSolutionError());
+	printf("wrt exact solution error = %f\n", LaPlaceEquation4->checkExactSolution(g));
+	printf("no. iterations = %d\n", parJacobi.getActualNumberOfIterations());
+	printf("time (ms): %g\n", ffTime(GET_TIME));
+	printf("\n");
 
-	#endif
+#endif
 
-	#ifdef PAR_GAUSS
-	_2DPoissonEquation * LaPlaceEquation5 = new _2DPoissonEquation(new _2DGrid(0., 1., 0., 1., n, m),
-																   new _2DDirichlet(g),
-																   f, e);
+#ifdef PAR_GAUSS
+	_2DPoissonEquation *LaPlaceEquation5 = new _2DPoissonEquation(new _2DGrid(0., 1., 0., 1., n, m),
+																  new _2DDirichlet(g),
+																  f, e);
 	_2DParallelGaussSeidelRedBlack parGaussSeidel(epsilon, it, nw, chunk, ci, cj);
 
 	ffTime(START_TIME);
 	parGaussSeidel(LaPlaceEquation5);
 	ffTime(STOP_TIME);
 
-	//printf("%-10i%-10i%-10i%-15f%-10f%-10i%-10i%-10i%-20e%-20e%-15i\n", n, m, nw, ffTime(GET_TIME), epsilon, chunk, ci, cj, LaPlaceEquation5->getSolutionError(), LaPlaceEquation5->checkExactSolution(g), parGaussSeidel.getActualNumberOfIterations());
-	//printf("SOLUTION\n");
-	//LaPlaceEquation5->printU();
-	//printf("%i %f\n", nw, ffTime(GET_TIME));
-	//printf("\n");
+	printf("\n");
+	printf("error = %f\n", LaPlaceEquation5->getSolutionError());
+	printf("wrt exact solution error = %f\n", LaPlaceEquation5->checkExactSolution(g));
+	printf("no. iterations = %d\n", parGaussSeidel.getActualNumberOfIterations());
+	printf("time (ms): %g\n", ffTime(GET_TIME));
 
-	#endif
-
+#endif
 }
