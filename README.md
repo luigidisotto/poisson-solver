@@ -35,4 +35,4 @@ To help you, the repo comes with ```run_poisson_solver.sh``` shell script, to ea
 
 ## Theory
 
-For further informations about basics and results, here you can find a copy of the [slides](seminar.pdf) I made for the University class on High Performance Scientific Computing @ University of Pisa.
+For further informations about basics and results, here you can find a copy of the [slides](seminar.pdf) I made for the High Performance Scientific Computing class @ University of Pisa.
