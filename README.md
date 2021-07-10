@@ -1,6 +1,6 @@
 # piosson-solver
 
-A C++ based implementation of a Poisson Equation solver performing Gauss-Seidel, Gauss-Seidel Red-Black or Jacobi methods. All the methods come with a sequential and parallel implementation.
+A C++ based implementation of a Poisson Equation solver performing Gauss-Seidel, Gauss-Seidel Red-Black or Jacobi methods. All the methods come with a sequential and parallel implementation. For the parallel implementations the code rely on the FastFlow C++ library.
 
 ## Requirements
 
