@@ -29,7 +29,7 @@ Parallel:
 
 ## Basic usage
 
-Once the code has been compiled, the generated binary code can be run provided with the following arguments ```./solver <n> <m> <eps> <nw> <sc> <bx> <by>```, where n and m represent the height and width of the grid for the discretized poisson equation, eps is the error tolerance. In the parallel versions, the option nw represents the number of threads, and sc is the FastFlow schedule type (ie data distribution policy), and bx and by are the sizes for the blocked version of the stencils, to optimize cache accesses.
+Once the code has been compiled, the generated binary code can be run provided with the following arguments ```./solver <n> <m> <eps> <nw> <sc> <bx> <by>```, where n and m represent the height and width of the grid for the discretized poisson equation, eps is the error tolerance. In the parallel versions, the option nw represents the number of threads, and sc is the FastFlow schedule type (ie data distribution policy), and bx and by are the sizes for the blocked version of the stencils in order to run blocked loops and thus optimize cache accesses.
 
 To help you, the repo comes with ```run_poisson_solver.sh``` shell script, to easily build and run the desired solver.
 
