@@ -1,6 +1,6 @@
 # piosson-solver
 
-A C++ based implementation of a Poisson Equation solver performing Gauss-Seidel, Gauss-Seidel Red-Black or Jacobi methods. All the methods come with a sequential and parallel implementation. For the parallel implementations the code rely on the FastFlow C++ library.
+A C++ based implementation of a Poisson Equation solver performing Gauss-Seidel, Gauss-Seidel Red-Black or Jacobi methods. All the methods come with a sequential and parallel implementation. For the parallel implementations the code leverages the APIs from [FastFlow](https://github.com/fastflow/fastflow) C++ library.
 
 ## Requirements
 
@@ -35,4 +35,4 @@ To help you, the repo comes with ```run_poisson_solver.sh``` shell script, to ea
 
 ## Theory
 
-For further informations about basics and results, here you can find a copy of the [slides](seminar.pdf) I made for the High Performance Scientific Computing class @ University of Pisa.
+For further informations about the math background on the implemented numerical solvers and the obtained results, you can find a copy of the [slides](seminar.pdf) I made for the High Performance Scientific Computing class @ University of Pisa.
